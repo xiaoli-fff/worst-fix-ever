@@ -1,67 +1,65 @@
-// Worst Fix Ever: Funniest Commit Message (Node 22, standard library only):
-// writes one original commit message for a bug fix that made everything
-// worse to /output/entry.txt.
+// Worst Fix Ever: Funniest Commit Message
+// https://make.fun/bounty/u-deysumbrella-worst-fix-ever-funniest-commit-message-3f1d9722
 //
-// Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
-//   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
+// The joke in one line: the 500s are "fixed" not by repairing anything, but by
+// answering every request with a 404 instead. The error dashboard goes quiet,
+// the bug count drops to zero, and the site is, technically, no longer
+// returning server errors — because nothing on it exists anymore. A fix that
+// works only if nobody looks at what it actually did.
 //
-// Deterministic: no network, no randomness, no time or environment input.
-// Both runs write identical bytes.
+// This program does nothing clever. It holds the single commit message as a
+// constant, checks it against the competition gate (one line, 1-100 chars,
+// not only whitespace), and writes it verbatim to entry.txt. No randomness,
+// no network, no reading of anything outside this file, so every run
+// produces byte-identical output.
 
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 
-// The joke: a fix that "works" on paper — the 500 errors are gone — because
-// every request now returns 404 instead. The repair broke more than it
-// mended, in the plain voice of a tired engineer typing a subject line.
-const ENTRY_TEXT =
-  'fix: stop the 500 errors by returning 404 for everything';
+// The entry: a fix that "works" by returning 404 for everything.
+const COMMIT_MESSAGE =
+  "fix: stop the 500 errors by returning 404 for everything";
 
-// Gate (competition.yaml): /output/entry.txt must be UTF-8 text of 1-100
-// characters, not only whitespace, and exactly one line.
-const MAX_CHARS = 100;
+// The gate allows at most 100 characters on a single line.
+const MAX_ENTRY_CHARS = 100;
 
-function failGate(detail: string): never {
-  throw new Error(`gate failed: ${detail}`);
+function outputDirectory(): string {
+  // Inside the grading sandbox the harness provides /output; locally the
+  // caller can point elsewhere with MAKEFUN_OUTPUT_DIR.
+  return process.env.MAKEFUN_OUTPUT_DIR ?? "/output";
 }
 
-function checkNotBlank(text: string): void {
-  if (text.trim().length === 0) {
-    failGate('entry must not be empty or only whitespace');
+function problemsWith(line: string): string[] {
+  const problems: string[] = [];
+  if (line.trim().length === 0) {
+    problems.push("entry is blank");
   }
-}
-
-function checkSingleLine(text: string): void {
-  if (text.includes('\n') || text.includes('\r')) {
-    failGate('entry must be exactly one line');
+  if (line.includes("\n") || line.includes("\r")) {
+    problems.push("entry must be a single line");
   }
-}
-
-function checkLength(text: string): void {
-  const chars = [...text].length;
-  if (chars < 1 || chars > MAX_CHARS) {
-    failGate(`entry must be 1-${MAX_CHARS} characters, got ${chars}`);
+  if (line.length > MAX_ENTRY_CHARS) {
+    problems.push(
+      `entry is ${line.length} characters, over the ${MAX_ENTRY_CHARS} limit`,
+    );
   }
+  return problems;
 }
 
-function checkNoTrailingSpace(text: string): void {
-  if (text !== text.trimEnd()) {
-    failGate('entry must not end with trailing whitespace');
+function main(): void {
+  const problems = problemsWith(COMMIT_MESSAGE);
+  if (problems.length > 0) {
+    for (const problem of problems) {
+      console.error(`gate failed: ${problem}`);
+    }
+    process.exit(1);
   }
+
+  const dir = outputDirectory();
+  mkdirSync(dir, { recursive: true });
+  // Written exactly as-is, with no trailing newline, so the file holds
+  // exactly the 56 characters of the commit message.
+  writeFileSync(join(dir, "entry.txt"), COMMIT_MESSAGE, "utf8");
+  console.log(`wrote entry.txt (${COMMIT_MESSAGE.length} chars) to ${dir}`);
 }
 
-// validateEntry checks each gate item separately so a failure names the
-// gate item that was missed instead of a bare character count.
-function validateEntry(text: string): string {
-  checkNotBlank(text);
-  checkSingleLine(text);
-  checkLength(text);
-  checkNoTrailingSpace(text);
-  return text + '\n';
-}
-
-const ENTRY = validateEntry(ENTRY_TEXT);
-
-const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
-mkdirSync(outDir, { recursive: true });
-writeFileSync(join(outDir, 'entry.txt'), ENTRY, 'utf8');
+main();
