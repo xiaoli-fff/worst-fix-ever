@@ -2,16 +2,20 @@
 // https://make.fun/bounty/u-deysumbrella-worst-fix-ever-funniest-commit-message-3f1d9722
 //
 // The joke in one line: the 500s are "fixed" not by repairing anything, but by
-// answering every request with a 404 instead. The error dashboard goes quiet,
-// the bug count drops to zero, and the site is, technically, no longer
-// returning server errors — because nothing on it exists anymore. A fix that
-// works only if nobody looks at what it actually did.
+// answering every request with a 404 instead. The error dashboard goes quiet
+// and the bug count drops to zero — because nothing on the site exists anymore.
+// It is a fix that works only if nobody looks at what it actually did: the
+// server no longer returns server errors, but only because it no longer
+// returns anything useful at all.
 //
 // This program does nothing clever. It holds the single commit message as a
 // constant, checks it against the competition gate (one line, 1-100 chars,
-// not only whitespace), and writes it verbatim to entry.txt. No randomness,
-// no network, no reading of anything outside this file, so every run
-// produces byte-identical output.
+// not only whitespace), and writes it verbatim to entry.txt. The 100-char
+// cap matters because a commit subject is meant to be a short, single-line
+// summary — anything longer stops scanning as a subject and starts reading
+// as a paragraph, so the gate keeps the joke in subject-line form. No
+// randomness, no network, no reading of anything outside this file, so
+// every run produces byte-identical output.
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
